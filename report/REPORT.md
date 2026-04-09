@@ -69,17 +69,17 @@
 
 ### Baseline Analysis
 
-Chạy `compare_chunking_strategies()` trên 2-3 tài liệu:
+Chạy `ChunkingStrategyComparator().compare()` trên 2-3 tài liệu:
 
 | Tài liệu | Strategy | Chunk Count | Avg Length | Preserves Context? |
 |-----------|----------|-------------|------------|-------------------|
-| | fixed_size | | | |
-| | by_sentences | | | |
-| | recursive | | | |
+| | FixedSizeChunker (`fixed_size`) | | | |
+| | SentenceChunker (`by_sentences`) | | | |
+| | RecursiveChunker (`recursive`) | | | |
 
 ### Strategy Của Tôi
 
-**Loại:** [built-in với tham số gì? / custom strategy]
+**Loại:** [FixedSizeChunker / SentenceChunker / RecursiveChunker / custom strategy]
 
 **Mô tả cách hoạt động:**
 > *Viết 3-4 câu: strategy chunk thế nào? Dựa trên dấu hiệu gì?*
@@ -114,14 +114,14 @@ Chạy `compare_chunking_strategies()` trên 2-3 tài liệu:
 
 ## 4. My Approach — Cá nhân (10 điểm)
 
-Giải thích cách tiếp cận của bạn khi implement từng phần trong solution.py.
+Giải thích cách tiếp cận của bạn khi implement các phần chính trong package `src`.
 
 ### Chunking Functions
 
-**`chunk_by_sentences`** — approach:
+**`SentenceChunker.chunk`** — approach:
 > *Viết 2-3 câu: dùng regex gì để detect sentence? Xử lý edge case nào?*
 
-**`chunk_recursive`** — approach:
+**`RecursiveChunker.chunk` / `_split`** — approach:
 > *Viết 2-3 câu: algorithm hoạt động thế nào? Base case là gì?*
 
 ### EmbeddingStore
@@ -164,7 +164,7 @@ Giải thích cách tiếp cận của bạn khi implement từng phần trong s
 
 ## 6. Results — Cá nhân (10 điểm)
 
-Chạy 5 benchmark queries của nhóm trên solution.py cá nhân. **5 queries phải trùng với các thành viên cùng nhóm.**
+Chạy 5 benchmark queries của nhóm trên implementation cá nhân của bạn trong package `src`. **5 queries phải trùng với các thành viên cùng nhóm.**
 
 ### Benchmark Queries & Gold Answers (nhóm thống nhất)
 

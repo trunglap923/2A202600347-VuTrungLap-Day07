@@ -8,38 +8,25 @@ Run from the day folder:
 No real API keys required — uses mock embeddings.
 """
 
-import importlib.util
-import sys
+import importlib
+import os
 import unittest
 from pathlib import Path
 
 DAY_DIR = Path(__file__).parent.parent
-SOLUTION_DIR = DAY_DIR / "solution"
+PACKAGE_NAME = os.getenv("LAB_SOLUTION_PACKAGE", "src")
 
-
-def _load(path: Path, unique_name: str):
-    spec = importlib.util.spec_from_file_location(unique_name, str(path))
-    mod = importlib.util.module_from_spec(spec)
-    sys.modules[unique_name] = mod
-    spec.loader.exec_module(mod)
-    return mod
-
-
-if (SOLUTION_DIR / "solution.py").exists():
-    _m = _load(SOLUTION_DIR / "solution.py", f"{DAY_DIR.name}.solution")
-elif (SOLUTION_DIR / "app.py").exists():
-    _m = _load(SOLUTION_DIR / "app.py", f"{DAY_DIR.name}.solution")
-else:
-    src = "template.py" if (DAY_DIR / "template.py").exists() else "app.py"
-    _m = _load(DAY_DIR / src, f"{DAY_DIR.name}.template")
+_m = importlib.import_module(PACKAGE_NAME)
 
 Document = getattr(_m, 'Document')
-chunk_fixed_size = getattr(_m, 'chunk_fixed_size')
-chunk_by_sentences = getattr(_m, 'chunk_by_sentences')
-chunk_recursive = getattr(_m, 'chunk_recursive')
 EmbeddingStore = getattr(_m, 'EmbeddingStore')
 KnowledgeBaseAgent = getattr(_m, 'KnowledgeBaseAgent')
 _mock_embed = getattr(_m, '_mock_embed')
+FixedSizeChunker = getattr(_m, 'FixedSizeChunker')
+SentenceChunker = getattr(_m, 'SentenceChunker')
+RecursiveChunker = getattr(_m, 'RecursiveChunker')
+ChunkingStrategyComparator = getattr(_m, 'ChunkingStrategyComparator')
+MockEmbedder = getattr(_m, 'MockEmbedder')
 template = _m
 
 SAMPLE_TEXT = (
@@ -50,39 +37,53 @@ SAMPLE_TEXT = (
     "Jumping is a physical activity that requires leg strength. "
 )
 
-LONG_TEXT = "word " * 200  # 1000 characters of "word "
+LONG_TEXT = "word " * 200
 
 
-# ---------------------------------------------------------------------------
-# Tests
-# ---------------------------------------------------------------------------
+class TestProjectStructure(unittest.TestCase):
 
-class TestChunkFixedSize(unittest.TestCase):
+    def test_root_main_entrypoint_exists(self):
+        self.assertTrue((DAY_DIR / 'main.py').exists())
+
+    def test_src_package_exists(self):
+        self.assertTrue((DAY_DIR / 'src' / '__init__.py').exists())
+
+
+class TestClassBasedInterfaces(unittest.TestCase):
+
+    def test_chunker_classes_exist(self):
+        self.assertTrue(all([FixedSizeChunker, SentenceChunker, RecursiveChunker, ChunkingStrategyComparator]))
+
+    def test_mock_embedder_exists(self):
+        embedder = MockEmbedder()
+        self.assertEqual(len(embedder("hello")), 64)
+
+
+class TestFixedSizeChunker(unittest.TestCase):
 
     def test_returns_list(self):
-        chunks = chunk_fixed_size(SAMPLE_TEXT, chunk_size=50, overlap=0)
+        chunks = FixedSizeChunker(chunk_size=50, overlap=0).chunk(SAMPLE_TEXT)
         self.assertIsInstance(chunks, list)
 
     def test_single_chunk_if_text_shorter(self):
         short = "hello world"
-        chunks = chunk_fixed_size(short, chunk_size=100, overlap=0)
+        chunks = FixedSizeChunker(chunk_size=100, overlap=0).chunk(short)
         self.assertEqual(len(chunks), 1)
         self.assertEqual(chunks[0], short)
 
     def test_chunks_respect_size(self):
-        chunks = chunk_fixed_size(LONG_TEXT, chunk_size=50, overlap=0)
-        for c in chunks[:-1]:  # last chunk may be shorter
+        chunks = FixedSizeChunker(chunk_size=50, overlap=0).chunk(LONG_TEXT)
+        for c in chunks[:-1]:
             self.assertLessEqual(len(c), 50)
 
     def test_correct_number_of_chunks_no_overlap(self):
         text = "a" * 100
-        chunks = chunk_fixed_size(text, chunk_size=25, overlap=0)
+        chunks = FixedSizeChunker(chunk_size=25, overlap=0).chunk(text)
         self.assertEqual(len(chunks), 4)
 
     def test_overlap_creates_shared_content(self):
-        text = "abcdefghijklmnopqrst"  # 20 chars
-        chunks = chunk_fixed_size(text, chunk_size=10, overlap=2)
-        # First chunk ends with "ij", second chunk should start with "ij"
+        text = "abcdefghijklmnopqrst"
+        chunks = FixedSizeChunker(chunk_size=10, overlap=2).chunk(text)
         if len(chunks) >= 2:
             overlap_from_first = chunks[0][-2:]
             start_of_second = chunks[1][:2]
@@ -90,58 +91,56 @@ class TestChunkFixedSize(unittest.TestCase):
 
     def test_no_overlap_no_shared_content(self):
         text = "abcdefghij"
-        chunks = chunk_fixed_size(text, chunk_size=5, overlap=0)
+        chunks = FixedSizeChunker(chunk_size=5, overlap=0).chunk(text)
         self.assertEqual(chunks[0], "abcde")
         self.assertEqual(chunks[1], "fghij")
 
-    def test_empty_text_returns_empty_list_or_single_empty(self):
-        chunks = chunk_fixed_size("", chunk_size=50, overlap=0)
+    def test_empty_text_returns_empty_list(self):
+        chunks = FixedSizeChunker(chunk_size=50, overlap=0).chunk("")
         self.assertIsInstance(chunks, list)
 
 
-class TestChunkBySentences(unittest.TestCase):
+class TestSentenceChunker(unittest.TestCase):
 
     def test_returns_list(self):
-        chunks = chunk_by_sentences(SAMPLE_TEXT, max_sentences_per_chunk=2)
+        chunks = SentenceChunker(max_sentences_per_chunk=2).chunk(SAMPLE_TEXT)
         self.assertIsInstance(chunks, list)
 
     def test_respects_max_sentences(self):
-        # SAMPLE_TEXT has 5 sentences; with max=2, expect at least 3 chunks
-        chunks = chunk_by_sentences(SAMPLE_TEXT, max_sentences_per_chunk=2)
+        chunks = SentenceChunker(max_sentences_per_chunk=2).chunk(SAMPLE_TEXT)
         self.assertGreaterEqual(len(chunks), 2)
 
     def test_single_sentence_max_gives_many_chunks(self):
-        chunks_1 = chunk_by_sentences(SAMPLE_TEXT, max_sentences_per_chunk=1)
-        chunks_3 = chunk_by_sentences(SAMPLE_TEXT, max_sentences_per_chunk=3)
+        chunks_1 = SentenceChunker(max_sentences_per_chunk=1).chunk(SAMPLE_TEXT)
+        chunks_3 = SentenceChunker(max_sentences_per_chunk=3).chunk(SAMPLE_TEXT)
         self.assertGreaterEqual(len(chunks_1), len(chunks_3))
 
     def test_chunks_are_strings(self):
-        chunks = chunk_by_sentences(SAMPLE_TEXT, max_sentences_per_chunk=2)
+        chunks = SentenceChunker(max_sentences_per_chunk=2).chunk(SAMPLE_TEXT)
         for c in chunks:
             self.assertIsInstance(c, str)
 
 
-class TestChunkRecursive(unittest.TestCase):
+class TestRecursiveChunker(unittest.TestCase):
 
     def test_returns_list(self):
-        chunks = chunk_recursive(SAMPLE_TEXT, chunk_size=100)
+        chunks = RecursiveChunker(chunk_size=100).chunk(SAMPLE_TEXT)
         self.assertIsInstance(chunks, list)
 
     def test_chunks_within_size_when_possible(self):
-        chunks = chunk_recursive(LONG_TEXT, chunk_size=100)
-        # Most chunks should be within size (last may vary)
-        within = sum(1 for c in chunks if len(c) <= 110)  # small tolerance
+        chunks = RecursiveChunker(chunk_size=100).chunk(LONG_TEXT)
+        within = sum(1 for c in chunks if len(c) <= 110)
         self.assertGreater(within, len(chunks) * 0.8)
 
     def test_empty_separators_falls_back_gracefully(self):
         text = "no separators here at all"
-        chunks = chunk_recursive(text, separators=[], chunk_size=100)
+        chunks = RecursiveChunker(separators=[], chunk_size=100).chunk(text)
         self.assertIsInstance(chunks, list)
         self.assertGreater(len(chunks), 0)
 
     def test_handles_double_newline_separator(self):
         text = "paragraph one\n\nparagraph two\n\nparagraph three"
-        chunks = chunk_recursive(text, separators=["\n\n"], chunk_size=200)
+        chunks = RecursiveChunker(separators=["\n\n"], chunk_size=200).chunk(text)
         self.assertGreaterEqual(len(chunks), 1)
 
 
@@ -257,23 +256,23 @@ class TestCompareChunkingStrategies(unittest.TestCase):
         "Deep learning uses neural networks with many layers. "
         "Natural language processing handles text understanding. "
         "Computer vision processes images and video streams."
-    ) * 3  # repeat for enough content
+    ) * 3
 
     def test_returns_three_strategies(self):
-        result = template.compare_chunking_strategies(self.SAMPLE_TEXT, chunk_size=100)
+        result = ChunkingStrategyComparator().compare(self.SAMPLE_TEXT, chunk_size=100)
         self.assertIn('fixed_size', result)
         self.assertIn('by_sentences', result)
         self.assertIn('recursive', result)
 
     def test_each_strategy_has_count_and_avg_length(self):
-        result = template.compare_chunking_strategies(self.SAMPLE_TEXT, chunk_size=100)
+        result = ChunkingStrategyComparator().compare(self.SAMPLE_TEXT, chunk_size=100)
         for strategy_name, stats in result.items():
             self.assertIn('count', stats)
             self.assertIn('avg_length', stats)
             self.assertIn('chunks', stats)
 
     def test_counts_are_positive(self):
-        result = template.compare_chunking_strategies(self.SAMPLE_TEXT, chunk_size=100)
+        result = ChunkingStrategyComparator().compare(self.SAMPLE_TEXT, chunk_size=100)
         for strategy_name, stats in result.items():
             self.assertGreater(stats['count'], 0)
 

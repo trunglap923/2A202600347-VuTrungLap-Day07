@@ -2,13 +2,15 @@
 
 Trong lab này, chúng ta không chỉ hỏi "Nó chạy không?" mà hỏi **"Retrieval quality tốt đến đâu?"**.
 
+> Xem `docs/SCORING.md` để biết rubric chấm điểm chính thức.
+
 ## Các Metric Quan Trọng
 
 ### 1. Retrieval Precision
 
 - **Top-k Relevance**: Trong k kết quả trả về, bao nhiêu kết quả thực sự liên quan đến câu hỏi?
 - **Score Distribution**: Điểm similarity có phân biệt rõ giữa kết quả tốt và kết quả nhiễu không?
-- **Benchmark Score**: Mỗi query 3 điểm — top-3 relevant + answer chính xác = 3, thiếu = 2/1/0.
+- **Benchmark Score**: Mỗi query 2 điểm — top-3 relevant + answer chính xác = 2, thiếu = 1/0.
 - **Mục tiêu**: Top-3 results nên có ít nhất 2 kết quả liên quan trực tiếp.
 
 ### 2. Chunk Coherence

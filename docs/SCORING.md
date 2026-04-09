@@ -1,6 +1,8 @@
 # Lab Scoring Rubric: Embedding & Vector Store
 
-Mỗi sinh viên nộp **một báo cáo duy nhất** (`report/TEMPLATE_REPORT.md`) bao gồm cả phần cá nhân và phần nhóm.
+Mỗi sinh viên nộp **một báo cáo duy nhất** (`report/REPORT.md`) bao gồm cả phần cá nhân và phần nhóm.
+
+> Tham khảo thêm `docs/EVALUATION.md` để xem các metric và góc nhìn đánh giá retrieval quality.
 
 ---
 
@@ -9,8 +11,8 @@ Mỗi sinh viên nộp **một báo cáo duy nhất** (`report/TEMPLATE_REPORT.m
 | Hạng mục | Mô tả | Điểm |
 | :--- | :--- | :--- |
 | **Core Implementation** | Tất cả pytest tests pass (`pytest tests/ -v`) | 30 |
-| **My Approach** | Giải thích cách implement từng phần trong solution.py | 10 |
-| **Competition Results** | 5 benchmark queries chạy trên solution.py cá nhân, cùng bộ queries với nhóm | 10 |
+| **My Approach** | Giải thích cách implement từng phần trong package src | 10 |
+| **Competition Results** | 5 benchmark queries chạy trên package src cá nhân, cùng bộ queries với nhóm | 10 |
 | **Warm-up** | Cosine similarity explanation + chunking math | 5 |
 | **Similarity Predictions** | 5 cặp câu, dự đoán vs actual, reflection | 5 |
 

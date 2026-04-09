@@ -29,17 +29,17 @@ No math required — explain conceptually:
 
 ## Part 2 — Core Coding (Cá nhân)
 
-Implement all TODOs in `solution/solution.py`. `Document` dataclass và `chunk_fixed_size` đã được implement sẵn làm ví dụ — đọc kỹ để hiểu pattern trước khi implement phần còn lại.
+Implement all TODOs in `src/chunking.py`, `src/store.py`, và `src/agent.py`. `Document` dataclass và `FixedSizeChunker` đã được implement sẵn làm ví dụ — đọc kỹ để hiểu pattern trước khi implement phần còn lại.
 
 Run `pytest tests/` to check progress.
 
 ### Checklist
 - [x] `Document` dataclass — ĐÃ IMPLEMENT SẴN
-- [x] `chunk_fixed_size` — ĐÃ IMPLEMENT SẴN
-- [ ] `chunk_by_sentences` — split on sentence boundaries, group into chunks
-- [ ] `chunk_recursive` — try separators in order, recurse on oversized pieces
+- [x] `FixedSizeChunker` — ĐÃ IMPLEMENT SẴN
+- [ ] `SentenceChunker` — split on sentence boundaries, group into chunks
+- [ ] `RecursiveChunker` — try separators in order, recurse on oversized pieces
 - [ ] `compute_similarity` — cosine similarity formula with zero-magnitude guard
-- [ ] `compare_chunking_strategies` — call all three, compute stats
+- [ ] `ChunkingStrategyComparator` — call all three, compute stats
 - [ ] `EmbeddingStore.__init__` — initialize store (in-memory or ChromaDB)
 - [ ] `EmbeddingStore.add_documents` — embed and store each document
 - [ ] `EmbeddingStore.search` — embed query, rank by dot product
@@ -48,7 +48,7 @@ Run `pytest tests/` to check progress.
 - [ ] `EmbeddingStore.delete_document` — remove all chunks for a doc_id
 - [ ] `KnowledgeBaseAgent.answer` — retrieve + build prompt + call LLM
 
-> **Nộp code:** `solution/solution.py`
+> **Nộp code:** `src/`
 > **Ghi approach vào:** Report — Section 4 (My Approach)
 
 ---
@@ -88,7 +88,7 @@ Ghi vào bảng:
 
 Mỗi thành viên **tự chọn strategy riêng** để thử trên cùng bộ tài liệu nhóm.
 
-**Step 1 — Baseline:** Chạy `compare_chunking_strategies()` trên 2-3 tài liệu. Ghi kết quả.
+**Step 1 — Baseline:** Chạy `ChunkingStrategyComparator().compare()` trên 2-3 tài liệu. Ghi kết quả.
 
 **Step 2 — Chọn hoặc thiết kế strategy của bạn:**
 - Dùng 1 trong 3 built-in strategies với tham số tối ưu, HOẶC
@@ -96,12 +96,15 @@ Mỗi thành viên **tự chọn strategy riêng** để thử trên cùng bộ 
 - Mỗi thành viên nên thử strategy **khác nhau** để có gì so sánh
 
 ```python
-def chunk_custom(text: str, **kwargs) -> list[str]:
+class CustomChunker:
     """Your custom chunking strategy for [your domain].
 
     Design rationale: [explain why this strategy fits your data]
     """
-    # Your implementation here
+
+    def chunk(self, text: str) -> list[str]:
+        # Your implementation here
+        ...
 ```
 
 **Step 3 — So sánh:** Custom/tuned strategy vs baseline trên cùng tài liệu.
@@ -127,7 +130,7 @@ Mỗi nhóm viết **đúng 5 benchmark queries** kèm **gold answers**.
 - Gold answers phải cụ thể và có thể verify từ tài liệu
 - Ít nhất 1 query yêu cầu metadata filtering để trả lời tốt
 
-> **Ghi kết quả vào:** Report — Section 6 (Competition Results — Benchmark Queries)
+> **Ghi kết quả vào:** Report — Section 6 (Results — Benchmark Queries & Gold Answers)
 
 ---
 
@@ -151,6 +154,7 @@ Call `compute_similarity()` on 5 pairs of sentences. **Before running**, predict
 **Step 3:** Thảo luận và rút ra bài học — chuẩn bị cho phần demo với các nhóm khác.
 
 > **Ghi kết quả vào:** Report — Section 6 (Results)
+> **Gợi ý đánh giá:** xem checklist ngắn trong `README.md` mục **Cách Tự Đánh Giá Kết Quả Retrieval** hoặc chi tiết hơn trong `docs/EVALUATION.md`.
 
 ---
 
@@ -162,11 +166,12 @@ Tìm ít nhất **1 failure case** trong quá trình so sánh. Mô tả:
 - Đề xuất cải thiện?
 
 > **Ghi kết quả vào:** Report — Section 7 (What I Learned)
+> **Gợi ý:** failure analysis nên tham chiếu các góc nhìn như precision, chunk coherence, metadata utility, và grounding quality.
 
 ---
 
 ## Submission Checklist
 
 - [ ] All tests pass: `pytest tests/ -v`
-- [ ] `solution/solution.py` copied (cá nhân)
-- [ ] Report completed (`report/TEMPLATE_REPORT.md` — 1 file/sinh viên)
+- [ ] `src/` updated (cá nhân)
+- [ ] Report completed (`report/REPORT.md` — 1 file/sinh viên)
