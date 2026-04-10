@@ -306,6 +306,12 @@ Chạy 5 benchmark queries của nhóm trên implementation cá nhân của bạ
 
 > Việc thiết kế **Parent Document Retriever**. Các bạn ấy không chỉ băm văn bản thành các Chunk nhỏ để tìm cho nhạy, mà sau khi tìm thấy, hệ thống còn tự động truy xuất ngược ra cái "Chunk Cha" ôm trọn văn bản lớn hơn để nạp vào LLM. Nhờ đó mà Agent không bao giờ bị tình trạng "mất não" do thiếu hụt ngữ cảnh trước sau.
 
+**Failure Case Analysis (Exercise 3.5 - Phân tích truy vấn thất bại):**
+
+> - **Query bị lỗi:** _"Viettel Cloud WAF có những gói dịch vụ nào?"_
+> - **Lý do thất bại:** Dù Vector Store trích xuất trúng tài liệu `Viettel Cloud WAF.md` (Top 1) nhưng lại bốc nhầm đoạn _Tổng quan và Tính năng chính_ thay vì bảng liệt kê _Gói cước (Standard, Advanced...)_. Nguyên nhân là do các từ khóa "dịch vụ", "Cloud WAF" xuất hiện quá dày đặc ở phần đầu tài liệu khiến Embedding trượt trọng tâm.
+> - **Đề xuất cải thiện:** Áp dụng Semantic Chunking hoặc gán riêng thẻ (Tag) cho các bảng giá để Agent ưu tiên Retrieve khu vực bảng biểu khi câu hỏi mang tính chất "so sánh gói, liệt kê giá".
+
 **Nếu làm lại, tôi sẽ thay đổi gì trong data strategy?**
 
 > Tôi sẽ không dựa dẫm hoàn toàn vào Cosine Similarity nữa. Thay vào đó, tôi sẽ triển khai mô hình **Hybrid Search**: Kết hợp Vector Search (OpenAI Embeddings) để bắt ngữ nghĩa + Keyword Search (BM25) để bắt chính xác tuyệt đối các từ viết tắt chuyên ngành bảo mật như _DDoS L4/L7, OWASP Top 10, WAF_.
@@ -324,5 +330,4 @@ Chạy 5 benchmark queries của nhóm trên implementation cá nhân của bạ
 | Results                     | Cá nhân | 10 / 10          |
 | Core implementation (tests) | Cá nhân | 30 / 30          |
 | Demo                        | Nhóm    | 0 / 5            |
-| Điểm Bonus (Custom Tooling) | Cá nhân | 0                |
-| **Tổng**                    |         | **100 / 100**    |
+| **Tổng**                    |         | **85 / 100**     |
