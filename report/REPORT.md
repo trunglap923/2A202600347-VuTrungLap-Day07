@@ -323,6 +323,6 @@ Chạy 5 benchmark queries của nhóm trên implementation cá nhân của bạ
 | Similarity predictions      | Cá nhân | 5 / 5            |
 | Results                     | Cá nhân | 10 / 10          |
 | Core implementation (tests) | Cá nhân | 30 / 30          |
-| Demo                        | Nhóm    | 5 / 5            |
-| Điểm Bonus (Custom Tooling) | Cá nhân | 10               |
+| Demo                        | Nhóm    | 0 / 5            |
+| Điểm Bonus (Custom Tooling) | Cá nhân | 0                |
 | **Tổng**                    |         | **100 / 100**    |
